@@ -2,134 +2,14 @@ library(readxl)
 library(ggplot2)
 library(dplyr)
 
-my_data <- read_excel("70batches.xlsx", 
-                      sheet = "raw 70 batches", 
-                      range = cell_cols("A:H"))
+clean.data=read.csv("data.csv")
+attach(clean.data)
 
-attach(my_data)
-
-#data cleaning
-
-my_data$`the date of diagnosis`=sub("年","/",my_data$`the date of diagnosis`)
-my_data$`the date of diagnosis`=sub("月","/",my_data$`the date of diagnosis`)
-my_data$`the date of diagnosis`=sub("日","",my_data$`the date of diagnosis`)
-my_data$`the date of diagnosis`=sub(" ","",my_data$`the date of diagnosis`)
-
-my_data$`the date of diagnosis`=as.Date(my_data$`the date of diagnosis`, "%Y/%m/%d")
+fit=glm(formula = survival ~ factor(gender)+factor(occupation)+batch, data = clean.data, family = binomial(link = logit))
+summary(fit)
 
 my_data=my_data[order(my_data$'the date of diagnosis'),]
 
-
 date_summary=data.frame(table(my_data$'the date of diagnosis'))
 colnames(date_summary)=c("date", "cases")
-
-
-
-# Library
-library(dygraphs)
-library(xts)          # To make the convertion data-frame / xts format
-library(tidyverse)
-library(lubridate)
-# Since my time is currently a factor, I have to convert it to a date-time format!
-date_summary$date <- ymd(date_summary$date)
-# Then you can create the xts necessary to use dygraph
-don <- xts(x = date_summary$cases, order.by = date_summary$date)
-
-# Finally the plot
-p <- dygraph(don) %>%
-  dyOptions(labelsUTC = TRUE, fillGraph=TRUE, fillAlpha=0.1, drawGrid = FALSE, colors="#D8AE5A") %>%
-  dyRangeSelector() %>%
-  dyCrosshair(direction = "vertical") %>%
-  dyHighlight(highlightCircleSize = 5, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = FALSE)  %>%
-  dyRoller(rollPeriod = 1)
-
-p
-
-
-##############################################
-
-
-which(is.na(my_data$sex))
-
-#Set female indicator as zero
-my_data$sex=as.numeric(my_data$sex)
-my_data$sex[my_data$sex==2]=0
-
-n=length(my_data$sex)
-n_male=sum(my_data$sex, na.rm=TRUE)
-n_femal=n-n_male
-
-sex_data <- data.frame(
-  sex=c('Male', 'Female'),
-  count=c(n_male, n_femal)
-)
-
-# Compute percentages
-sex_data$fraction = sex_data$count / sum(sex_data$count)
-
-# Compute the cumulative percentages (top of each rectangle)
-sex_data$ymax = cumsum(sex_data$fraction)
-
-# Compute the bottom of each rectangle
-sex_data$ymin = c(0, head(sex_data$ymax, n=-1))
-
-# Compute label position
-sex_data$labelPosition <- (sex_data$ymax + sex_data$ymin) / 2
-
-# Compute a good label
-sex_data$label <- paste0(sex_data$sex, "\n Cases: ", sex_data$count)
-
-# Make the plot
-ggplot(sex_data, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=sex)) +
-  geom_rect() +
-  geom_label( x=3.5, aes(y=labelPosition, label=label), size=6) +
-  scale_fill_brewer(palette=4) +
-  coord_polar(theta="y") +
-  xlim(c(2, 4)) +
-  theme_void() +
-  theme(legend.position = "none")
-
-#######################################
-
-physician=occupation[which(occupation==1)]
-nurse=occupation[which(occupation==2)]
-other=occupation[which(occupation==3)]
-
-n=length(occupation)
-n_physician=length(physician)
-n_nurse=length(nurse)
-n_other=length(other)
-
-
-
-ocupation_data <- data.frame(
-  ocupation=c('Physician', 'Nurse', 'Other'),
-  count=c(n_physician, n_nurse, n_other)
-)
-
-# Compute percentages
-ocupation_data$fraction = ocupation_data$count / sum(ocupation_data$count)
-
-# Compute the cumulative percentages (top of each rectangle)
-ocupation_data$ymax = cumsum(ocupation_data$fraction)
-
-# Compute the bottom of each rectangle
-ocupation_data$ymin = c(0, head(ocupation_data$ymax, n=-1))
-
-# Compute label position
-ocupation_data$labelPosition <- (ocupation_data$ymax + ocupation_data$ymin) / 2
-
-# Compute a good label
-ocupation_data$label <- paste0(ocupation_data$ocupation, "\n Cases: ", ocupation_data$count)
-
-# Make the plot
-ggplot(ocupation_data, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=ocupation)) +
-  geom_rect() +
-  geom_label( x=3.5, aes(y=labelPosition, label=label), size=6) +
-  scale_fill_brewer(palette=4) +
-  coord_polar(theta="y") +
-  xlim(c(2, 4)) +
-  theme_void() +
-  theme(legend.position = "none")
-
 

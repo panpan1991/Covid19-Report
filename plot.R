@@ -1,42 +1,12 @@
----
-title: "Report"
-output:
-  html_document: default
-  pdf_document: default
----
-
-```{r include=FALSE}
 library(readxl)
 library(ggplot2)
 library(dplyr)
+
+# Library
 library(dygraphs)
 library(xts)          # To make the convertion data-frame / xts format
 library(tidyverse)
 library(lubridate)
-```
-
-```{r echo=FALSE}
-my_data <- read_excel("74batchesAnalysis.xlsx", 
-                      sheet = "全74批原始数据", 
-                      range = cell_cols("A:L"))
-attach(my_data)
-#data cleaning
-
-my_data$`the date of diagnosis`=sub("年","/",my_data$`the date of diagnosis`)
-my_data$`the date of diagnosis`=sub("月","/",my_data$`the date of diagnosis`)
-my_data$`the date of diagnosis`=sub("日","",my_data$`the date of diagnosis`)
-my_data$`the date of diagnosis`=sub(" ","",my_data$`the date of diagnosis`)
-
-my_data$`the date of diagnosis`=as.Date(my_data$`the date of diagnosis`, "%Y/%m/%d")
-
-date_summary=data.frame(table(my_data$'the date of diagnosis'))
-colnames(date_summary)=c("date", "cases")
-
-```
-
-## Cases by Date
-
-```{r echo=FALSE}
 # Since my time is currently a factor, I have to convert it to a date-time format!
 date_summary$date <- ymd(date_summary$date)
 # Then you can create the xts necessary to use dygraph
@@ -51,11 +21,13 @@ p <- dygraph(don) %>%
   dyRoller(rollPeriod = 1)
 
 p
-```
 
-## Cases by Sex
 
-```{r echo=FALSE}
+##############################################
+
+
+which(is.na(my_data$sex))
+
 #Set female indicator as zero
 my_data$sex=as.numeric(my_data$sex)
 my_data$sex[my_data$sex==2]=0
@@ -71,12 +43,16 @@ sex_data <- data.frame(
 
 # Compute percentages
 sex_data$fraction = sex_data$count / sum(sex_data$count)
+
 # Compute the cumulative percentages (top of each rectangle)
 sex_data$ymax = cumsum(sex_data$fraction)
+
 # Compute the bottom of each rectangle
 sex_data$ymin = c(0, head(sex_data$ymax, n=-1))
+
 # Compute label position
 sex_data$labelPosition <- (sex_data$ymax + sex_data$ymin) / 2
+
 # Compute a good label
 sex_data$label <- paste0(sex_data$sex, "\n Cases: ", sex_data$count)
 
@@ -90,11 +66,7 @@ ggplot(sex_data, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=sex)) +
   theme_void() +
   theme(legend.position = "none")
 
-```
-
-## Cases by Ocupation
-
-```{r echo=FALSE}
+#######################################
 
 physician=occupation[which(occupation==1)]
 nurse=occupation[which(occupation==2)]
@@ -114,14 +86,11 @@ ocupation_data <- data.frame(
 
 # Compute percentages
 ocupation_data$fraction = ocupation_data$count / sum(ocupation_data$count)
-
 # Compute the cumulative percentages (top of each rectangle)
 ocupation_data$ymax = cumsum(ocupation_data$fraction)
-
 # Compute the bottom of each rectangle
 ocupation_data$ymin = c(0, head(ocupation_data$ymax, n=-1))
-
-# Compute label position
+# Compute label position (center of each rectangle)
 ocupation_data$labelPosition <- (ocupation_data$ymax + ocupation_data$ymin) / 2
 
 # Compute a good label
@@ -131,11 +100,8 @@ ocupation_data$label <- paste0(ocupation_data$ocupation, "\n Cases: ", ocupation
 ggplot(ocupation_data, aes(ymax=ymax, ymin=ymin, xmax=4, xmin=3, fill=ocupation)) +
   geom_rect() +
   geom_label( x=3.5, aes(y=labelPosition, label=label), size=6) +
-  scale_fill_brewer(palette=4) +
+  scale_fill_brewer(palette='BuPu') +
   coord_polar(theta="y") +
   xlim(c(2, 4)) +
   theme_void() +
   theme(legend.position = "none")
-
-```
-
