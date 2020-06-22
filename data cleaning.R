@@ -28,8 +28,9 @@ my_data$`diagnosis date`=sub("年","/",my_data$`diagnosis date`)
 my_data$`diagnosis date`=sub("月","/",my_data$`diagnosis date`)
 my_data$`diagnosis date`=sub("日","",my_data$`diagnosis date`)
 my_data$`diagnosis date`=sub(" ","",my_data$`diagnosis date`)
-
 my_data$`diagnosis date`=as.Date(my_data$`diagnosis date`, "%Y/%m/%d")
+
+my_data$province=sub("省","",my_data$province)
 
 my_data$id=as.numeric(my_data$id)
 my_data$batch=as.numeric(my_data$batch)
