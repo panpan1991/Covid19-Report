@@ -31,6 +31,8 @@ my_data$`diagnosis date`=sub(" ","",my_data$`diagnosis date`)
 my_data$`diagnosis date`=as.Date(my_data$`diagnosis date`, "%Y/%m/%d")
 
 my_data$province=sub("省","",my_data$province)
+my_data$province[which(my_data$province!='湖北')]='Other'
+my_data$province[which(my_data$province=='湖北')]='Hubei'
 
 my_data$id=as.numeric(my_data$id)
 my_data$batch=as.numeric(my_data$batch)

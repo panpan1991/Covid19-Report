@@ -9,10 +9,12 @@ fit_full=glm(formula = survival ~ factor(gender)+factor(occupation), data = clea
 summary(fit_full)
 
 
-count.data=clean.data %>% count(gender, occupation, province)
+count.data=clean.data %>% count(occupation, province,gender)
 #clean.data %>% count(gender)
 
 fit_infected=glm(formula = n ~ factor(gender) + factor(occupation)+factor(province), data = count.data, family = poisson(link = 'log'))
 summary(fit_infected)
+
+
 
 
